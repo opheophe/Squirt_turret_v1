@@ -223,4 +223,8 @@ void loop () {
     delay(1000);
     measureAndShoot(i);
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 9dbfd610191c6c67dc17d4c84f444a11844ff818
