@@ -7,43 +7,47 @@ int relay_pin = 10;
 int servo_pin = 9;
 int sensitivity_pin = A7;
 
-int calibration_iterations = 10;
+int calibration_iterations = 3;
 int accepted_deviation = 400; // deviation to trigger a shot,altered with potentiometer
-
 
 // Servo settings
 Servo servo1;
-int low = 24;
+int low = 15;
 int mid = 80;
-int high = 166;
-int turn_delay = 50;
+int high = 150;
+int turn_delay = 200;
 
 // Other settings
-float distances[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-int positions[]  = {24, 38, 52, 66, 80, 102, 123, 145, 166};
-int num_positions = 9;
+float distances[] = {
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+
+int num_positions = 180;
+
 int current_position = num_positions / 2;
 int current_angle = mid;
 int direction = true; // true = +
 
-void setupPositions() {
-  for (int i = 0; i < num_positions; i++) {
-    positions[i] = low + i * (high - low) / (num_positions - 1);
-  }
-}
-
-
-void print_array(int in_array[]) {
-  for (int i = 0; i < num_positions; i++) {
-    Serial.print(in_array[i]);
-    Serial.print(" ");
-  }
-  Serial.println();
-}
-
-void print_array(float in_array[]) {
-  for (int i = 0; i < num_positions; i++) {
-    Serial.print(in_array[i]);
+void print_distances() {
+  for (int i = low; i < high; i = i + 5) {
+    Serial.print(distances[i]);
     Serial.print(" ");
   }
   Serial.println();
@@ -64,14 +68,6 @@ void beep(int duration) {
   digitalWrite(buzzer_pin, LOW);
 }
 
-void pulse_beep(int duration, int pulses) {
-  for (int i = 1; i <= pulses; i++) {
-    digitalWrite(buzzer_pin, HIGH);
-    delay(duration);
-    digitalWrite(buzzer_pin, LOW);
-  }
-}
-
 
 void fire() {
   digitalWrite(relay_pin, HIGH);
@@ -80,53 +76,39 @@ void fire() {
   digitalWrite(relay_pin, LOW);
 }
 
-float calibrate(int msec) {
-  float tempRange = 0.0;
-  for (int i = 1; i <= calibration_iterations; i++) {
-    tempRange = tempRange + distanceSensor.measureDistanceCm();
-    delay(msec);
-  }
-  return tempRange / calibration_iterations;
-}
-
-void measureAndShoot(int position) {
+void measureAndShoot() {
   checkSensitivity();
   delay(10);
   float measure = distanceSensor.measureDistanceCm();
-  float deviation = abs(measure - distances[position]);
-  delay(10);
-
-
-  // 1. Check if there might be a deviation.
-  // 2. Doublecheck by measuring several times
-  // 3. Trigger fire or abort
-
-  if (deviation > accepted_deviation) {
-    measure = calibrate(50);
-    deviation = abs(measure - distances[position]);
+  float deviation = abs(measure - distances[current_angle]);
+  delay(60);
+  
     if (deviation > accepted_deviation) {
-      Serial.print("# Pos ");
-      Serial.print(position);
-      Serial.print(" Measured: ");
-      Serial.print(measure);
-      Serial.print(" Deviation: ");
-      Serial.print(deviation);
-      Serial.print(" --> ** FIRE ** ");
-      fire();
-      Serial.print(" --> Recalibrate");
-      distances[position] = calibrate(100);
-      Serial.println();
-    } else {
-      Serial.print("# Pos ");
-      Serial.print(position);
-      Serial.print(" Measured: ");
-      Serial.print(measure);
-      Serial.print(" Deviation: ");
-      Serial.print(deviation);
-      Serial.print(" --> ** ABORT ** ");
-      Serial.println();
+      measure = calibrate();
+      deviation = abs(measure - distances[current_angle]);
+      if (deviation > accepted_deviation) {
+        Serial.print("# Angle ");
+        Serial.print(current_angle);
+        Serial.print(" Measured: ");
+        Serial.print(measure);
+        Serial.print(" Deviation: ");
+        Serial.print(deviation);
+        Serial.print(" --> ** FIRE ** ");
+        fire();
+        Serial.print(" --> Recalibrate");
+        distances[current_angle] = calibrate();
+        Serial.println();
+      } else {
+        Serial.print("# Pos ");
+        Serial.print(current_angle);
+        Serial.print(" Measured: ");
+        Serial.print(measure);
+        Serial.print(" Deviation: ");
+        Serial.print(deviation);
+        Serial.print(" --> ** ABORT ** ");
+        Serial.println();
+      }
     }
-  }
 
 }
 
@@ -140,89 +122,79 @@ void printupto3blank(int number) {
   }
 }
 
-void movetoposition(int new_position) {
-  moveto(positions[new_position]);
-  current_position = new_position;
-}
-
 void moveto(int moveto_angle) {
   servo1.attach(servo_pin);
-  // printupto3blank(moveto_angle);
-  //  Serial.print(moveto_angle);
-  //  Serial.print(" ");
-
-  if (moveto_angle < current_angle) {
-    for (int i = current_angle; i > moveto_angle; i--) {
-      servo1.write(i);
-      current_angle = i;
-      delay(turn_delay);
-      //Serial.print(" ");
-      //printupto3blank(current_angle);
-      //Serial.print(current_angle);
-      //      Serial.print(">");
-    }
-  } else if (moveto_angle > current_angle) {
-    for (int i = current_angle; i < moveto_angle; i++) {
-      servo1.write(i);
-      current_angle = i;
-      delay(turn_delay);
-      //Serial.print(" ");
-      //printupto3blank(current_angle);
-      //Serial.print(current_angle);
-      //      Serial.print(">");
-    }
-  }
-  servo1.detach();
+  servo1.write(moveto_angle);
   current_angle = moveto_angle;
-  // Serial.println();
+  delay(turn_delay);
+  servo1.detach();
+}
+
+float calibrate() {
+  float tempRange = 0.0;
+  for (int i = 1; i <= calibration_iterations; i++) {
+    tempRange = tempRange + distanceSensor.measureDistanceCm();
+    delay(100); // Specified in datasheet
+  }
+  return tempRange / calibration_iterations;
 }
 
 void calibrate_distances() {
+  beep(400);
   Serial.println("### Calibrating");
-  for (int i = num_positions - 1; i >= 0; i--) {
+
+  for (int i = high; i > low; i = i - 5) {
+    moveto(i);
+    delay(10);
+    distances[i] = calibrate();
+    delay(50);
     Serial.print(i);
     Serial.print(" ");
-    movetoposition(i);
-    distances[current_position] = calibrate(100);
+    Serial.println(distances[i]);
   }
-  Serial.println();
-  print_array(distances);
+  print_distances();
   Serial.println("### Calibrating complete");
+  beep(400);
+  delay(200);
+  beep(400);
+}
+
+void checkSensitivity() {
+  int sensitivity = map(analogRead(sensitivity_pin), 0, 1023, 0, 400);
+  if (abs(sensitivity - accepted_deviation) > 20) {
+    // Do another check just to make sure
+    sensitivity = map(analogRead(sensitivity_pin), 0, 1023, 0, 400);
+    if (abs(sensitivity - accepted_deviation) > 20) {
+      accepted_deviation = sensitivity;
+      Serial.print("Accepted deviation: ");
+      Serial.println(accepted_deviation);
+    }
+  }
 }
 
 void setup () {
   Serial.begin(9600);
   Serial.println();
-  setupPositions();
-
+  //servo1.attach(servo_pin);
+  //servo1.detach();
   pinMode(buzzer_pin, OUTPUT);
   pinMode(relay_pin, OUTPUT);
   pinMode(servo_pin, OUTPUT);
-
+  moveto(high);
+  delay(1000);
   calibrate_distances();
 }
 
-void checkSensitivity() {
-  int sensitivity = map(analogRead(sensitivity_pin), 0, 1023, 0, 400);
-  if (sensitivity != accepted_deviation) {
-    accepted_deviation = sensitivity;
-    Serial.print("Accepted deviation: ");
-    Serial.println(accepted_deviation);
-  }
-}
-
 void loop () {
-
-  for (int i = 0; i < num_positions; i++) {
-    movetoposition(i);
-    delay(1000);
-    measureAndShoot(i);
+  for (int i = low; i < high; i = i + 5) {
+    moveto(i);
+    measureAndShoot();
+    delay(60);
   }
-  for (int i = num_positions - 2; i > 0; i--) {
-    movetoposition(i);
-    delay(1000);
-    measureAndShoot(i);
+  for (int i = high; i > low; i = i - 5) {
+    moveto(i);
+    measureAndShoot();
+    delay(60);
   }
-
 }
 
