@@ -1,7 +1,3 @@
-// ---------------------------------------------------------------------------
-// Example NewPing library sketch that does a ping about 20 times per second.
-// ---------------------------------------------------------------------------
-
 #include <NewPing.h>
 #include <Servo.h>
 
@@ -75,6 +71,7 @@ int distances_2[] = {
 void setup() {
   Serial.begin(9600); // Open serial monitor at 115200 baud to see ping results.
   pinMode(USPOWER_PIN, OUTPUT);
+  pinMode(buzzer_pin, OUTPUT);
   digitalWrite(USPOWER_PIN, HIGH);
   beep(250);
 }
@@ -166,7 +163,7 @@ void measure(int distance_array) {
       Serial.print(" ## FIRE ## ");
       fire();
     }
-    
+
     Serial.println();
 
     if (distance_array == 1) {
@@ -174,7 +171,7 @@ void measure(int distance_array) {
     } else {
       distances_2[current_angle] = cm;
     }
-    
+
     delay(50);
   }
 }
@@ -189,8 +186,6 @@ void printbox(int numbox) {
 
 void loop() {
 
-beep(250);
-delay(1000);
 
 
 
