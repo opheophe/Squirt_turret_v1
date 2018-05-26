@@ -19,7 +19,7 @@ Servo servo1;
 int low = 6;
 int mid = 90;
 int high = 174;
-int turn_delay = 30;
+int turn_delay = 20;
 int measure_delay = 30;
 int turn = 3;
 int current_angle = mid;
@@ -186,7 +186,17 @@ void printbox(int numbox) {
 
 void loop() {
 
+  for (int i = low; i < high; i = i + turn) {
+    moveto(i);
+    delay(turn_delay);
+    measure(1);
 
+  }
+  for (int i = high; i > low; i = i - turn) {
+    moveto(i);
+    delay(turn_delay);
+    measure(2);
+  }
 
 
 
