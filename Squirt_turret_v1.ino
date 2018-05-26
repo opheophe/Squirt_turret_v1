@@ -1,7 +1,12 @@
-#include <HCSR04.h>
+#include <NewPing.h>
 #include <Servo.h>
 
-UltraSonicDistanceSensor distanceSensor(12, 11);  // Initialize sensor that uses digital pins 13 and 12.
+#define TRIGGER_PIN  12  // Arduino pin tied to trigger pin on the ultrasonic sensor.
+#define ECHO_PIN     11  // Arduino pin tied to echo pin on the ultrasonic sensor.
+#define MAX_DISTANCE 500 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
+
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
+
 int buzzer_pin = 2;
 int relay_pin = 10;
 int servo_pin = 9;
@@ -12,10 +17,10 @@ int accepted_deviation = 400; // deviation to trigger a shot,altered with potent
 
 // Servo settings
 Servo servo1;
-int low = 15;
+int low = 5;
 int mid = 80;
-int high = 150;
-int turn_delay = 200;
+int high = 175;
+int turn_delay = 100;
 
 // Other settings
 float distances[] = {
@@ -79,7 +84,7 @@ void fire() {
 void measureAndShoot() {
   checkSensitivity();
   delay(10);
-  float measure = distanceSensor.measureDistanceCm();
+  float measure = sonar.ping_cm();
   float deviation = abs(measure - distances[current_angle]);
   delay(60);
   
@@ -133,7 +138,7 @@ void moveto(int moveto_angle) {
 float calibrate() {
   float tempRange = 0.0;
   for (int i = 1; i <= calibration_iterations; i++) {
-    tempRange = tempRange + distanceSensor.measureDistanceCm();
+    tempRange = tempRange + sonar.ping_cm();
     delay(100); // Specified in datasheet
   }
   return tempRange / calibration_iterations;
