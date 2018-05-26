@@ -19,7 +19,7 @@ Servo servo1;
 int low = 6;
 int mid = 90;
 int high = 174;
-int turn_delay = 20;
+int turn_delay = 30;
 int measure_delay = 30;
 int turn = 3;
 int current_angle = mid;
@@ -70,6 +70,7 @@ int distances_2[] = {
 
 void setup() {
   Serial.begin(9600); // Open serial monitor at 115200 baud to see ping results.
+  delay(1000);
   pinMode(USPOWER_PIN, OUTPUT);
   pinMode(buzzer_pin, OUTPUT);
   digitalWrite(USPOWER_PIN, HIGH);
@@ -148,7 +149,9 @@ void measure(int distance_array) {
     fill(cm);
     Serial.print(" Last: ");
     fill(distance);
-    Serial.println(" --> Null");
+    Serial.print(" Accepted deviation: ");
+    fill(accepted_deviation);
+    Serial.println(" -->  Null");
 
     delay(50);
   } else {
@@ -156,6 +159,8 @@ void measure(int distance_array) {
     fill(cm);
     Serial.print(" Last: ");
     fill(distance);
+    Serial.print(" Accepted deviation: ");
+    fill(accepted_deviation);
     Serial.print(" --> ");
     fill(distance - cm);
 
@@ -163,6 +168,8 @@ void measure(int distance_array) {
       Serial.print(" ## FIRE ## ");
       fire();
     }
+
+
 
     Serial.println();
 
