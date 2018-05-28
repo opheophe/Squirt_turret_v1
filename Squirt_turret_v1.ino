@@ -10,6 +10,8 @@ int buzzer_pin = 2;
 int relay_pin = 10;
 int servo_pin = 9;
 int sensitivity_pin = A7;
+int led_red_pin = 6;
+int led_green_pin = 5;
 
 int calibration_iterations = 3;
 int accepted_deviation = 400; // deviation to trigger a shot,altered with potentiometer
@@ -73,6 +75,8 @@ void setup() {
   delay(1000);
   pinMode(USPOWER_PIN, OUTPUT);
   pinMode(buzzer_pin, OUTPUT);
+  pinMode(led_red_pin, OUTPUT);
+  pinMode(led_green_pin, OUTPUT);
   digitalWrite(USPOWER_PIN, HIGH);
   beep(250);
 }
@@ -134,6 +138,9 @@ void fire() {
 }
 
 void measure(int distance_array) {
+  digitalWrite(led_red_pin, LOW);
+  digitalWrite(led_green_pin, LOW);
+
   checkSensitivity();
   int distance;
   if (distance_array == 1) {
@@ -145,6 +152,7 @@ void measure(int distance_array) {
 
   int cm = sonar.ping_cm();
   if (cm == 0 || cm > 500) {
+    digitalWrite(led_red_pin, HIGH);
     Serial.print("Current: ");
     fill(cm);
     Serial.print(" Last: ");
@@ -165,6 +173,7 @@ void measure(int distance_array) {
     fill(distance - cm);
 
     if (distance - cm > accepted_deviation) {
+      digitalWrite(led_green_pin, HIGH);
       Serial.print(" ## FIRE ## ");
       fire();
     }
