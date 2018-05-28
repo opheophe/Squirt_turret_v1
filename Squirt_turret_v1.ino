@@ -71,12 +71,13 @@ int distances_2[] = {
 };
 
 void setup() {
-  Serial.begin(9600); // Open serial monitor at 115200 baud to see ping results.
-  delay(1000);
-  pinMode(USPOWER_PIN, OUTPUT);
+  Serial.begin(9600);
   pinMode(buzzer_pin, OUTPUT);
   pinMode(led_red_pin, OUTPUT);
   pinMode(led_green_pin, OUTPUT);
+  pinMode(USPOWER_PIN, OUTPUT);
+  beep(250);
+  delay(1000);
   digitalWrite(USPOWER_PIN, HIGH);
   beep(250);
 }
