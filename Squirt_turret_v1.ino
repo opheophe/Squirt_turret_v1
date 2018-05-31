@@ -74,6 +74,7 @@ void setup() {
   Serial.begin(9600);
   pinMode(buzzer_pin, OUTPUT);
   pinMode(led_red_pin, OUTPUT);
+  pinMode(relay_pin, OUTPUT);
   pinMode(led_green_pin, OUTPUT);
   pinMode(USPOWER_PIN, OUTPUT);
   beep(250);
@@ -134,7 +135,7 @@ void beep(int duration) {
 void fire() {
   digitalWrite(relay_pin, HIGH);
   beep(250);
-  // delay(250);
+ //  delay(250);
   digitalWrite(relay_pin, LOW);
 }
 
