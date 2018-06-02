@@ -70,12 +70,56 @@ int distances_2[] = {
   -400, -400, -400, -400, -400, -400, -400, -400, -400, -400
 };
 
+int num_wrong[] = {
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+
+int num_wrong_2[] = {
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+
 void setup() {
   Serial.begin(9600);
   pinMode(buzzer_pin, OUTPUT);
   pinMode(led_red_pin, OUTPUT);
   pinMode(led_green_pin, OUTPUT);
   pinMode(USPOWER_PIN, OUTPUT);
+  pinMode(relay_pin, OUTPUT);
+  
   beep(250);
   delay(1000);
   digitalWrite(USPOWER_PIN, HIGH);
@@ -133,8 +177,8 @@ void beep(int duration) {
 
 void fire() {
   digitalWrite(relay_pin, HIGH);
-  beep(250);
-  // delay(250);
+  //beep(250);
+  delay(250);
   digitalWrite(relay_pin, LOW);
 }
 
@@ -142,29 +186,64 @@ void measure(int distance_array) {
   digitalWrite(led_red_pin, LOW);
   digitalWrite(led_green_pin, LOW);
 
+
   checkSensitivity();
   int distance;
+  int wrong;
   if (distance_array == 1) {
     distance = distances[current_angle];
+    wrong = num_wrong[current_angle];
   } else {
     distance = distances_2[current_angle];
+    wrong = num_wrong_2[current_angle];
   }
-
+  Serial.print("Angle: ");
+  fill(current_angle);
 
   int cm = sonar.ping_cm();
   if (cm == 0 || cm > 500) {
+    wrong = wrong + 1;
+    // No proper reading
     digitalWrite(led_red_pin, HIGH);
-    Serial.print("Current: ");
+    Serial.print(" Current: ");
     fill(cm);
     Serial.print(" Last: ");
     fill(distance);
     Serial.print(" Accepted deviation: ");
     fill(accepted_deviation);
-    Serial.println(" -->  Null");
+    Serial.print(" Wrong: ");
+    fill(wrong);
 
+
+    if (wrong > 4) {
+      digitalWrite(led_red_pin, HIGH);
+      digitalWrite(led_green_pin, HIGH);
+      Serial.print(" ¤¤ WRONG SET : 400 ¤¤ ");
+      if (distance_array == 1) {
+        distances[current_angle] = 400;
+      } else {
+        distances_2[current_angle] = 400;
+      }
+    }
+    
+    if (distance_array == 1) {
+      num_wrong[current_angle] = wrong;
+    } else {
+      num_wrong_2[current_angle] = wrong;
+    }
+
+
+
+    Serial.println();
     delay(50);
   } else {
-    Serial.print("Current: ");
+    // Proper reading
+    if (distance_array == 1) {
+      num_wrong[current_angle] = 0;
+    } else {
+      num_wrong_2[current_angle] = 0;
+    }
+    Serial.print(" Current: ");
     fill(cm);
     Serial.print(" Last: ");
     fill(distance);
@@ -178,8 +257,6 @@ void measure(int distance_array) {
       Serial.print(" ## FIRE ## ");
       fire();
     }
-
-
 
     Serial.println();
 
